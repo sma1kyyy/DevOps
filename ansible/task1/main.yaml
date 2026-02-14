@@ -1,0 +1,59 @@
+---
+- name: task1 - setup nginx
+  hosts: my_nginx
+  become: yes
+  gather_facts: False
+
+  pre_tasks:
+    - name: gather minimal facts
+      ansible.builtin.setup:
+        gather_subset: "!all,min"
+
+  tasks:
+    - name: install nginx
+      ansible.builtin.package:
+        name: nginx
+        state: present
+      tags: nginx
+
+    - name: create dir
+      ansible.builtin.file:
+        path: /var/www/static
+        state: directory
+        mode: '0755'
+
+    - name: create files
+      ansible.builtin.copy:
+        content: "test file number {{ item }}\n"
+        dest: "/var/www/static/file_{{ item }}.txt"
+        mode: '0644'
+      loop: [1, 2, 3]
+
+    - name: create a subfolder
+      ansible.builtin.file:
+        path: /var/www/static/subfolder
+        state: directory
+        mode: '0755'
+
+    - name: deploy nginx
+      ansible.builtin.template:
+        src: nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+      notify: 
+        - Test Nginx config
+        - Restart Nginx
+
+    - name: ensure nginx
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: test nginx config
+      ansible.builtin.command: nginx -t
+
+    - name: restart Nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
