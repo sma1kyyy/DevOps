@@ -6,12 +6,12 @@
 
 Скрины работоспособности сркипта: 
 
-![alt text](script_screen1.png)
+![alt text](img/script_screen1.png)
 
 Результат 000, потому что s3.mdst.yandex.net данный домен яндекса внутренний ресурс, поэтому запрос не может достучаться. 
 Пример с другим URL (https://ya.ru), в котором добавил -L, чтобы автоматически проходить все 301 и 302 (см. файл BashCode.sh):
 
-![alt text](script_screen2.png)
+![alt text](img/cript_screen2.png)
 
 Инструкция:
 
