@@ -9,10 +9,10 @@
 Скрины работоспособности:
 
 Главная страница с заменой порта:
-![alt text](screen_port1.png)
+![alt text](img/screen_port1.png)
 
 Утилита curl для проверки порта с выводом заголовка и тела:
-![alt text](screen_port2.png)
+![alt text](img/screen_port2.png)
 
 Инструкция: 
 Убедитесь, что установлен ansible, также, что модуль лежит в папке library/.
