@@ -9,10 +9,10 @@
 Скрины работоспособности:
 
 Главная страница 
-![alt text](screen_work1.png)
+![alt text](img/screen_work1.png)
 
 Переход по ручке /files/ на файловый центр
-![alt text](screen_work2.png)
+![alt text](img/screen_work2.png)
 
 Инструкция:
 
