@@ -1,0 +1,26 @@
+events {
+    worker_connections 1024;
+}
+
+http {
+
+    charset utf-8;
+    
+    server {
+        listen 80;
+        server_name localhost;
+
+        location /files/ {
+            alias /var/www/static/;
+            autoindex on;
+            autoindex_exact_size off;
+            autoindex_localtime on;
+            charset utf-8;
+        }
+
+        location / {
+            return 200 "Nginx фулл ворк! Окей летс гоу >  /files/";
+            add_header Content-Type text/plain;
+        }
+    }
+}
