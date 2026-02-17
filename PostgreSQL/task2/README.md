@@ -43,7 +43,7 @@ sudo -u postgres PGPASSWORD='StrongReplPass_2026' \
 ```
 
 скрин выполнения 
-![alt text](image.png)
+![alt text](screens/image.png)
 
 ## 3 запуск standby
 
@@ -71,10 +71,10 @@ from pg_stat_replication;
 скрины:
 
 на реплике:
-![alt text](image-1.png)
+![alt text](screens/image-1.png)
 
 на мастере:
-![alt text](image-2.png)
+![alt text](screens/image-2.png)
 
 реплика успешно подключена
 но давайте деатльнее посмотри на работу синхронизации
@@ -92,9 +92,11 @@ sudo -u postgres psql -p 5432 -c "SELECT * FROM success_check;"
 ```
 реузьлтат:
 
-![alt text](image-3.png)
+![alt text](screens/image-3.png)
 
 ### итоги епт
+
+пойдет
 
 - на второй vm создан физический клон primary через `pg_basebackup`
 - standby запущен из `/pg_data/16`
