@@ -1,7 +1,7 @@
 # этот плейбук автоматизирует подготовку первой виртуальной машины под primary postgresql 16
 - name: prepare primary postgresql host
   hosts: primary
-  become: no
+  become: yes
   vars:
     # здесь перечислены базовые пакеты для работы с репозиториями и диагностикой
     base_packages:
@@ -19,17 +19,16 @@
 
   tasks:
     # обновляем индекс пакетов перед установкой
-    # - name: update apt cache
-    #   ansible.builtin.apt:
-    #     update_cache: true
-    #     сори ребят, у меня нет пароля от вм яндекс клауда, поэтому плейбук вылетает с ошибкой прав доступа
+    - name: update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+      ignore_errors: yes
 
     # устанавливаем базовые утилиты
-    # - name: install base packages
-    #   ansible.builtin.apt:
-    #     name: "{{ base_packages }}"
-    #     tate: present
-    # сори здесь тоже права нужны я лох тотальный
+    - name: install base packages
+      ansible.builtin.apt:
+        name: "{{ base_packages }}"
+        state: present
 
     # добавляем ключ официального репозитория postgresql
     - name: add postgresql apt signing key
@@ -45,21 +44,20 @@
       args:
         creates: /usr/share/keyrings/postgresql.gpg
 
-    # добавляем репозиторий pgdg для debian 11
-    # - name: add pgdg apt repository
-    #   ansible.builtin.copy:
-    #     dest: /etc/apt/sources.list.d/pgdg.list
-    #     mode: '0644'
-    #     content: |
-    #       deb [signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt bullseye-pgdg main
-    # здесь опять сори анлак пздц пароля нет от вм я в шоке вообще
+   #добавляем репозиторий pgdg для debian 11
+    - name: add pgdg apt repository
+      ansible.builtin.copy:
+        dest: /etc/apt/sources.list.d/pgdg.list
+        mode: '0644'
+        content: |
+          deb [signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt bullseye-pgdg main
     
 
     # повторно обновляем индекс после добавления репозитория
-    # - name: update apt cache after pgdg repository
-    #   ansible.builtin.apt:
-    #     update_cache: true
-    # ну объективно мне надо было самому разворачивать 2 вм, но было впадлу. если стрыжак скажет, что это хуйня, то я создам 2 вм, где у меня уже будут пароли. у ребят, у которхы есть пароли могут это все расскоментировать
+    - name: update apt cache after pgdg repository
+      ansible.builtin.apt:
+        update_cache: true
+      ignore_errors: true
 
     # устанавливаем postgresql 16
     - name: install postgresql packages
@@ -76,13 +74,12 @@
         group: postgres
         mode: '0700'
 
-    # останавливаем сервис postgresql перед ручной инициализацией
-    # - name: stop postgresql service
-    #   ansible.builtin.systemd:
-    #     name: postgresql
-    #     state: stopped
-    #     enabled: true
-    # опять же если стрыжак скажет, пароля у меня нет от вм повторюсь
+    #останавливаем сервис postgresql перед ручной инициализацией
+    - name: stop postgresql service
+      ansible.builtin.systemd:
+        name: postgresql
+        state: stopped
+        enabled: true
 
     # удаляем стандартный кластер если он был создан пакетом
     - name: drop default cluster if exists
@@ -91,4 +88,3 @@
       register: drop_cluster
       changed_when: drop_cluster.rc == 0
       failed_when: drop_cluster.rc not in [0, 1]
-      
