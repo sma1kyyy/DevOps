@@ -33,7 +33,7 @@ create publication pub_orders for table public.orders_logical;
 select * from pg_create_logical_replication_slot('orders_slot', 'pgoutput');
 ```
 скрин:
-![alt text](image.png)
+![alt text](screens/image.png)
 
 ## 3 действия на втором инстансе replica vm
 
