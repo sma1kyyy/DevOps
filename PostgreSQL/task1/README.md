@@ -16,12 +16,14 @@
     7. Создать пользователя для репликации
     8. Настроить доступы пользователю чтобы с другой виртуалки можно было подключиться
 
-## 1 подготовка через ansible
+## 1 ansible
 
 ## перед запуском нужно скорректировать ip адреса в inventory
 ```bash
 # запускаем playbook подготовки primary
-ansible-playbook -i inventory.ini main.yaml
+ansible-playbook -i inventory.ini main.yaml \
+  --user debian \
+  --private-key ~/.ssh/id_ed25519
 ```
 
 ## 2. ручная инициализация кластера в `/pg_data/16` (я сделал его еще в task0)
@@ -108,15 +110,15 @@ sudo grep -n "pgbench" /var/log/postgresql/postgresql-16-manual.log | tail -n 20
 
 после инициализации схемы и нагрузки, при которой у многих припотели попки и они в ужасе ждали, когда тестирование закончится, проверяем логи
 вот для начала скрин после нагрузки 
-![alt text](image.png)
+![alt text](screens/image.png)
 474 tps при 10 клиентах... (транзакицйи в секунду при 10 пользователях) как по мне хороший результат для ВМ за копейки. лееетс го дальше
 
 вот скрин логов
-![alt text](image-1.png)
+![alt text](screens/image-1.png)
 
 как мы видим, pgbench создает таблицы от имени postgres, но потом идет запуск от пользователя pgbench у которого нет прав  
 
-в таком случае просто покдлючаемся как постгрес 
+в таком случае просто покдлючаемся как постгрес
 ```sql
 # делаем его владельцем
 postgres=# ALTER DATABASE bench OWNER TO pgbench;
@@ -148,7 +150,7 @@ PGPASSWORD='StrongPgbenchPass_2026' pgbench -h 127.0.0.1 -U pgbench -d bench -c 
 sudo grep -n "pgbench" /var/log/postgresql/postgresql-16-manual.log | tail -n 20
 
 теперь ошибки от неудачных запусков и потому что прав на таблиц нет, но уже лучше
-![alt text](image-2.png)
+![alt text](screens/image-2.png)
 
 ## 6 и самое потное............................................................................................................ это............................................................................... запросы любимые фулл хард сучки потеем
 
@@ -177,10 +179,10 @@ limit 10;
 
 вот скрины запросов 
 # среднее время на запрос
-![alt text](image-3.png)
+![alt text](screens/image-3.png)
 
 # суммарное время
-![alt text](image-4.png)
+![alt text](screens/image-4.png)
 
 ## 7 создание пользователя репликации
 
@@ -189,6 +191,8 @@ limit 10;
 create role repl_user with replication login password 'StrongReplPass_2026';
 ```
 ### итоги епт
+
+в целом и общем, плейбук успешно работает и все коровки довольны
 
 - primary сервер поднят из ручного `initdb` в `/pg_data/16`
 - база `bench`, роль `pgbench` и расширения созданы
