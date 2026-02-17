@@ -1,0 +1,81 @@
+# плейбук втоматизирует подготовку второго инстанса postgresql для логической репликации на реплике
+- name: prepare second postgres instance for logical replication
+  hosts: replica
+  become: true
+  vars:
+    # здесь указаны пути и порт второго инстанса
+    logical_data_dir: /pg_data/16-one-base
+    logical_port: 5544
+
+  tasks:
+    # создаем каталог данных для второго инстанса
+    - name: create logical data directory
+      ansible.builtin.file:
+        path: "{{ logical_data_dir }}"
+        state: directory
+        owner: postgres
+        group: postgres
+        mode: '0700'
+
+    # создаем каталог конфигурации сервиса systemd
+    - name: create systemd unit directory
+      ansible.builtin.file:
+        path: /etc/systemd/system
+        state: directory
+        mode: '0755'
+
+    # создаем unit для второго инстанса postgresql
+    - name: install systemd unit for logical instance
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/postgresql-16-logical.service
+        mode: '0644'
+        content: |
+          [Unit]
+          Description=postgresql 16 logical instance
+          After=network.target
+
+          [Service]
+          Type=forking
+          User=postgres
+          Group=postgres
+          ExecStart=/usr/lib/postgresql/16/bin/pg_ctl -D {{ logical_data_dir }} -l /var/log/postgresql/postgresql-16-logical.log start
+          ExecStop=/usr/lib/postgresql/16/bin/pg_ctl -D {{ logical_data_dir }} stop
+          ExecReload=/usr/lib/postgresql/16/bin/pg_ctl -D {{ logical_data_dir }} reload
+          PIDFile={{ logical_data_dir }}/postmaster.pid
+
+          [Install]
+          WantedBy=multi-user.target
+
+    # перечитываем конфигурацию systemd после создания unit
+    - name: reload systemd daemon
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    # инициализируем каталог данных если он еще пустой
+    - name: initialize logical cluster if not initialized
+      ansible.builtin.command:
+        cmd: /usr/lib/postgresql/16/bin/initdb -D {{ logical_data_dir }} --locale=C --encoding=UTF8
+      become_user: postgres
+      args:
+        creates: "{{ logical_data_dir }}/PG_VERSION"
+
+    # настраиваем порт второго инстанса
+    - name: set logical instance port
+      ansible.builtin.lineinfile:
+        path: "{{ logical_data_dir }}/postgresql.conf"
+        regexp: '^#?port\s*='
+        line: "port = {{ logical_port }}"
+
+    # разрешаем локальные и удаленные подключения к второму инстансу
+    - name: set logical instance listen addresses
+      ansible.builtin.lineinfile:
+        path: "{{ logical_data_dir }}/postgresql.conf"
+        regexp: '^#?listen_addresses\s*='
+        line: "listen_addresses = '*'"
+
+    # включаем сервис второго инстанса
+    - name: enable logical instance service
+      ansible.builtin.systemd:
+        name: postgresql-16-logical.service
+        enabled: true
+        state: started
