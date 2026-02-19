@@ -48,52 +48,40 @@
 # я решил реализовать дерево проекта так:
 
 ```text
- @kirill  tree -h
+  @kirill  tree -h
 [4.0K]  .
 ├── [4.0K]  app
-│   ├── [   0]  cache.py
-│   ├── [   0]  config.py
-│   ├── [   0]  extensions.py
-│   ├── [   0]  __init__.py
-│   ├── [   0]  models.py
-│   └── [   0]  routes.py
-├── [   0]  docker-compose.yaml
-├── [   0]  Dockerfile
+│   ├── [1.2K]  cache.py
+│   ├── [ 782]  config.py
+│   ├── [ 183]  extensions.py
+│   ├── [ 662]  __init__.py
+│   ├── [ 894]  models.py
+│   └── [2.9K]  routes.py
+├── [2.1K]  docker-compose.yaml
+├── [ 510]  Dockerfile
 ├── [4.0K]  nginx
-│   └── [   0]  default.conf
-├── [1.1K]  README.md
-├── [   0]  requirements.txt
+│   └── [1.3K]  default.conf
+├── [7.8K]  README.md
+├── [ 293]  requiremenets.txt
+├── [4.0K]  screens
+│   ├── [ 39K]  image-1.png
+│   ├── [ 46K]  image-2.png
+│   ├── [ 19K]  image-3.png
+│   ├── [ 23K]  image-4.png
+│   ├── [ 11K]  image-5.png
+│   ├── [ 12K]  image-6.png
+│   └── [ 11K]  image.png
 ├── [4.0K]  tests
-│   ├── [   0]  conftest.py
-│   └── [   0]  test_tasks_api.py
-└── [   0]  wsgi.py
+│   ├── [1.6K]  conftest.py
+│   └── [2.1K]  test_tasks_api.py
+└── [  92]  wsgi.py
 
-4 directories, 14 files
+5 directories, 21 files
 ```
-
-# вм для запуска
-
-как и в прошлой работе я буду использовать арендованную вм на яндекс клауде
-
-- vm1: `178.154.199.20`, debian 11, 2 vcpu, 1 gb ram, 10 gb hdd
-
 
 ## океееей, леттс гооо
 
-# 1 docker + compose plugin 
-задаемся вопросом, а как нам поставить докер + композ плагин на вм?
-ответ:
-
-```bash
-sudo apt update
-sudo apt install -y docker.io docker-compose-plugin
-sudo systemctl enable --now docker
-sudo usermod -aG docker $USER
-```
-
-надо еще ребутнутся потом, чтобы docker без sudo запускался
-
-# 2 папка проекта
+# 1 папка проекта
 
 ```bash
 cd Flask
@@ -101,13 +89,27 @@ cd Flask
 
 должны быть здесь
 
-# 3 поднятие всего стенда
+# 2 поднятие всего стенда
 
 ```bash
 docker compose up --build -d
 ```
 
-# 4 проверка здоровья у нашего братика 
+сразу говорю, сейчас DockerHub банят, поэтому при сборке Docker не сможет достучаться до него и вот как это можно пофиксить (так сделал я)
+открываете файл `sudo nano /etc/docker/daemon.json`
+и вставляете 
+```bash
+{
+  "registry-mirrors": [
+    "https://mirror.gcr.io",
+    "https://daocloud.io",
+    "https://c.163.com"
+  ]
+}
+```
+после сохранения перезапустите докер `sudo systemctl restart docker`
+
+# 3 проверка здоровья у нашего братика 
 
 ``` bash
 curl http://localhost/api/health
@@ -115,6 +117,8 @@ curl http://localhost/api/health
 
 ожидаемый ответ в виде статуса: ок
 
+скринчик:
+![alt text](screens/image.png)
 ---
 
 ## CRUD поинты
@@ -126,19 +130,28 @@ curl -X POST http://localhost/api/tasks \
   -H 'Content-Type: application/json' \
   -d '{"title":"сделать дз","description":"проверить все пункты"}'
 ```
+скринчик:
+![alt text](screens/image-2.png)
 
 # получить список задач 
 
 ```bash
 curl http://localhost/api/tasks
 ```
-в ответе будет source и тут надо различать, если будет postgres - список прочитался из бд, если будет redis-cache - список пришел из redis
+# в ответе будет source и тут надо различать, если будет postgres - список прочитался из бд, если будет redis-cache - список пришел из redis
+
+скринчик:
+![alt text](screens/image-1.png)
+
+# что и ожидалось, первый запрос идет с базки, при последующих приходит с редиска
 
 # получаем задачу id
 
 ```bash
 curl http://localhost/api/tasks/1
 ```
+скринчик:
+![alt text](screens/image-3.png)
 
 # обновить задачу
 
@@ -147,12 +160,16 @@ curl -X  PUT http://localhost/api/tasks/1 \
   -H 'Content-Type: application/json' \
   -d '{"title": "flask task", "is done": "true"}'
 ```
+скринчик:
+![alt text](screens/image-4.png)
 
 # удалить задачу 
 
 ```bash
 curl -X DELETE http://localhost/api/tasks/1
 ```
+скринчик:
+![alt text](screens/image-5.png)
 
 ---
 
@@ -165,7 +182,7 @@ curl -X DELETE http://localhost/api/tasks/1
 # nginx кеш 
 
 - в `nginx/default.conf` включен `proxy_cache`
-- кешуиреются только `GET/HEAD`
+- кешируетмя только `GET/HEAD`
 - в ответ добавляется `X-Nginx-Cache: HIT|MISS|BYPASS` 
 - 
 ---
@@ -180,12 +197,42 @@ source .venv/bin/activate
 pip install -r requiremenets.txt
 pytest -q
 ```
+скринчик:
+![alt text](screens/image-6.png)
 
-# выполнено:
+---
 
-- сценарий CRUD
-- проверка что второй `GET /api/tasks` отдается уже из кеша
+### почему у `source` иногда всегда `postgres`
+- поле `source` показывает источник данных внутри flask приложения в момент, когда ответ был сгенерен
+- если nginx отдал кешированный ответ (HIT), то старое значение значение `source` из кешированного body
+- чтобы наглядно увидеть redis-cache из приложения, endpoint `/api/tasks` исключен из nginx-cache и всегда проксируется в app
+
+проверка:
+
+```bash
+curl -i http://localhost/api/tasks
+curl -i http://localhost/api/tasks
+```
+
+ожидаемо:
+- 1-й запрос: `source=postgres`
+- 2-й запрос: `source=redis-cache`
+- заголовок: `X-Nginx-Cache-Status: BYPASS`
   
+  скринчик: 
+  ![alt text](screens/image-7.png)
 ---
 
 # итоги епт
+
+- постгря поднят и используется приложением
+- реализован CRUD на Flask
+- запуск через gunicorn 
+- nginx проксируется на бэк
+- кеширование на nginx есть
+- кеширование на redis есть 
+- все в композе под автоматизацию запуска
+
+## пункт "nginx -> redis cache" "кому мало" это доп задача и обычно требует стороннего nginx-модуля. я реализовал базовый стек: nginx micro-cache + redis app-cache
+
+### тимати ван лав
