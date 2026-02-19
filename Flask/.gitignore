@@ -1,0 +1,8 @@
+# python-generated files
+__pycache__/
+*.py[oc]
+app/__pycache__
+.pytest_cache
+
+# virtual environments
+.venv
