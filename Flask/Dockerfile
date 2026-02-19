@@ -5,10 +5,10 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # копируем файл зависимостей заранее для кеша
-COPY requirements.txt . 
+COPY requiremenets.txt . 
 
 # ставим зависимости
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requiremenets.txt
 
 # копируем исходники
 COPY . . 
@@ -17,5 +17,5 @@ COPY . .
 EXPOSE 8000
 
 # запуск gunicorn с 2 воркерами
-CMD ["qunicorn", "-w", "2", "-b", "0.0.0.0:8000", "wsgi:app"]
+CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:8000", "wsgi:app"]
 
