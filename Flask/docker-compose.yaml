@@ -4,6 +4,12 @@ services:
   app:
     # сборка фласк контейнера из локального докерфайла
     build: .
+    ports:
+      - "8000:8000"
+    # сначала создаем таблицы одним потоком, потом запускаем 
+    command: >
+      sh -c "python -c \"from app import create_app, db; a=create_app(); a.app_context().push(); db.create_all()\" && 
+             gunicorn -w 2 -b 0.0.0.0:8000 --access-logfile - wsgi:app"
     # переменные окружения для подключения
     environment: 
       DATABASE_URL: postgresql+psycopg2://flask:flask@db:5432/flaskdb
@@ -11,8 +17,10 @@ services:
       TASKS_CACHE_TTL: 60
     # старт после базы
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy # Теперь ждем реальной готовности
+      redis:
+        condition: service_started
   
   db:
     # минимальный официальный постгрес образ
@@ -25,6 +33,12 @@ services:
     # сохранение данных 
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    # проверка готовности базы принимать подключения
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flask -d flaskdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
     # для кеша апи ответов
