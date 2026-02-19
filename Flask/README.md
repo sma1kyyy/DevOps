@@ -1,6 +1,4 @@
-
-
-<!-- CRUD на Flask -->
+### CRUD на Flask
 
 # Django когда-нибудь потом, ес ср.
 
