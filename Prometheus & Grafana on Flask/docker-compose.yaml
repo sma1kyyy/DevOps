@@ -1,0 +1,65 @@
+# описание всех компонентов и автоматизация запуска
+
+services:
+  app:
+    # сборка фласк контейнера из локального докерфайла
+    build: .
+    ports:
+      - "8000:8000"
+    # сначала создаем таблицы одним потоком, потом запускаем 
+    command: >
+      sh -c "python -c \"from app import create_app, db; a=create_app(); a.app_context().push(); db.create_all()\" && 
+             gunicorn -w 2 -b 0.0.0.0:8000 --access-logfile - wsgi:app"
+    # переменные окружения для подключения
+    environment: 
+      DATABASE_URL: postgresql+psycopg2://flask:flask@db:5432/flaskdb
+      REDIS_URL: redis://redis:6379/0
+      TASKS_CACHE_TTL: 60
+    # старт после базы
+    depends_on:
+      db:
+        condition: service_healthy # Теперь ждем реальной готовности
+      redis:
+        condition: service_started
+  
+  db:
+    # минимальный официальный постгрес образ
+    image: postgres:16-alpine
+    # инициализация учетки и базы
+    environment:
+      POSTGRES_USER: flask
+      POSTGRES_PASSWORD: flask
+      POSTGRES_DB: flaskdb
+    # сохранение данных 
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # проверка готовности базы принимать подключения
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flask -d flaskdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    # для кеша апи ответов
+    image: redis:7-alpine
+
+  nginx:
+    # проксирует запрос к flask
+    image: nginx:1.27-alpine
+    # внешний порт
+    ports:
+      - "80:80"
+    # монтируем конфиг и папку кеша
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - nginx_cache:/var/cache/nginx
+    # перед стартом ожидание приложения
+    depends_on:
+      - app
+
+# ну и неймы томов 
+volumes:
+  postgres_data:
+  nginx_cache:
+
