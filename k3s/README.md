@@ -159,3 +159,5 @@ kubectl port-forward svc/argocd-server -n argocd 8081:443
 kubectl apply -f argocd/
  
 будет по итогу 3 apps: postgres,flask-app,monitoring
+
+
