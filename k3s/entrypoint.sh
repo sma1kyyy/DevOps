@@ -1,5 +1,11 @@
-#!/usr/bin/env sh
+#!/bin/bash
 set -e
+mkdir -p /tmp && chmod 777 /tmp
 
-uwsgi --ini /app/uwsgi.ini &
-exec nginx -g 'daemon off;'
+# 1. uWSGI ПЕРВЫМ
+uwsgi --ini uwsgi.ini &
+sleep 3
+
+# 2. Nginx ПОТОМ  
+nginx
+wait
