@@ -9,7 +9,7 @@ run apt-get update \
 
 workdir /app
 
-copy requirements.txt ./
+copy requiremenets.txt ./
 run pip install --no-cache-dir -r requiremenets.txt
 
 copy app ./app
