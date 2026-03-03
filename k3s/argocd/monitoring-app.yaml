@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/sma1kyyy/DevOps.git
     targetRevision: master
-    path: k3s/charts/monitoring
+    path: charts/PrometheusGrafana
   destination:
     server: https://kubernetes.default.svc
     namespace: flask-stack
