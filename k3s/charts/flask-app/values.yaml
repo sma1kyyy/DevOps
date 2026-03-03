@@ -1,7 +1,7 @@
 namespace: flask-stack
 replicaCount: 2
 image:
-  repository: docker.io/example/flask-k3s
+  repository: docker.io/sma1kyyy/flask-k3s
   tag: latest
   pullPolicy: IfNotPresent
 env:
