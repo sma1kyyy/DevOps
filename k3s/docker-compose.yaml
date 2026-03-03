@@ -1,0 +1,49 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: flask_db
+    environment:
+      POSTGRES_DB: flaskdb
+      POSTGRES_USER: flask
+      POSTGRES_PASSWORD: flask
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flask -d flaskdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: flask_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: flask-k3s:local
+    container_name: flask_app
+    environment:
+      DATABASE_URL: postgresql+psycopg2://flask:flask@db:5432/flaskdb
+      REDIS_URL: redis://redis:6379/0
+      TASKS_CACHE_TTL: "60"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+
+volumes:
+  postgres_data:
