@@ -22,5 +22,7 @@ spec:
               value: {{ .Values.env.databaseUrl | quote }}
             - name: REDIS_URL
               value: {{ .Values.env.redisUrl | quote }}
+            - name: REDIS_PORT
+              value: "6379"
           ports:
             - containerPort: 80
