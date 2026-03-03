@@ -1,0 +1,11 @@
+namespace: flask-stack
+replicaCount: 2
+image:
+  repository: docker.io/example/flask-k3s
+  tag: latest
+  pullPolicy: IfNotPresent
+env:
+  databaseUrl: postgresql://flask:flask@postgres:5432/tasks
+  redisUrl: redis://redis:6379/0
+service:
+  port: 80
