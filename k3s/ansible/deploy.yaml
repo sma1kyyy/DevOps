@@ -1,0 +1,53 @@
+---
+- name: настройка k3s и деплой стеков
+  hosts: k3s
+  become: true
+  vars:
+    kubectl_path: /usr/local/bin/kubectl
+  tasks:
+    - name: установка зависимостей
+      apt:
+        name:
+          - curl
+          - tar
+        update_cache: true
+
+    - name: установка k3s
+      shell: curl -sfL https://get.k3s.io | sh -
+      args:
+        creates: /usr/local/bin/k3s
+
+    - name: ожидание ноды
+      shell: k3s kubectl get nodes
+      register: kubectl_result
+      retries: 10
+      delay: 10
+      until: kubectl_result.rc == 0
+
+    - name: установка helm
+      shell: curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      args:
+        creates: /usr/local/bin/helm
+
+    - name: создание рабочей папки
+      file:
+        path: /opt/flask-stack
+        state: directory
+
+    - name: копирование helm чартов
+      copy:
+        src: ../charts/
+        dest: /opt/flask-stack/charts/
+
+    - name: создание namespace
+      shell: k3s kubectl create namespace flask-stack
+      ignore_errors: true
+
+    - name: установка postgres chart
+      shell: helm upgrade --install postgres /opt/flask-stack/charts/postgres --namespace flask-stack --create-namespace
+
+    - name: установка flask chart
+      shell: helm upgrade --install flask-app /opt/flask-stack/charts/flask-app --namespace flask-stack
+
+    - name: установка monitoring chart
+      shell: helm upgrade --install monitoring /opt/flask-stack/charts/monitoring --namespace flask-stack
