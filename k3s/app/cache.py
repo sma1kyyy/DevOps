@@ -6,7 +6,8 @@ import redis
 from flask import current_app
 
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
-REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+REDIS_PORT = int(urlparse(redis_url).port or 6379)
 REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
 
 def get_redis_client() -> redis.Redis:
